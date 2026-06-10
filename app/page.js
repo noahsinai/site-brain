@@ -11,6 +11,11 @@ export default function Dashboard() {
   const [selected, setSelected] = useState("42-17");
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [addMode, setAddMode] = useState(false);
+  const [pendingPin, setPendingPin] = useState(null); // {lat, lng}
+  const [newName, setNewName] = useState("");
+  const [newType, setNewType] = useState("well");
+  const [savingSite, setSavingSite] = useState(false);
   const feedRef = useRef(null);
 
   async function refresh() {
@@ -49,6 +54,38 @@ export default function Dashboard() {
     await refresh();
   }
 
+  function startAdd() {
+    setAddMode(true);
+    setPendingPin(null);
+    setNewName("");
+    setNewType("well");
+  }
+
+  function cancelAdd() {
+    setAddMode(false);
+    setPendingPin(null);
+  }
+
+  async function saveSite() {
+    if (!pendingPin || !newName.trim() || savingSite) return;
+    setSavingSite(true);
+    try {
+      const res = await fetch("/api/site", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name: newName.trim(), type: newType, lat: pendingPin.lat, lng: pendingPin.lng, who: "Dispatcher" }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        cancelAdd();
+        await refresh();
+        setSelected(data.site.id);
+      }
+    } finally {
+      setSavingSite(false);
+    }
+  }
+
   const sites = state?.sites || [];
   const site = sites.find((s) => s.id === selected) || null;
   const down = sites.filter((s) => s.status === "down").length;
@@ -67,13 +104,50 @@ export default function Dashboard() {
         <span className="stat" style={{ color: attn ? "var(--amber)" : undefined }}><b>{attn}</b> ATTENTION</span>
         {emg > 0 && <span className="stat" style={{ color: "var(--red)" }}>⚠ <b>{emg}</b> EMERGENCY</span>}
         <span className="stat"><b>{enroute}</b> CREW EN ROUTE</span>
+        <button onClick={addMode ? cancelAdd : startAdd} style={addMode ? { color: "var(--orange)", borderColor: "var(--orange)" } : undefined}>
+          {addMode ? "✕ CANCEL" : "+ ADD SITE"}
+        </button>
         <button onClick={reseed}>RESET DEMO</button>
       </header>
 
       <div className="main">
-        <div className="mapwrap">
+        <div className={`mapwrap ${addMode ? "adding" : ""}`}>
           <div id="map" />
-          <FieldMap sites={sites} selectedId={selected} onSelect={setSelected} />
+          <FieldMap
+            sites={sites}
+            selectedId={selected}
+            onSelect={setSelected}
+            addMode={addMode}
+            onMapClick={(lat, lng) => setPendingPin({ lat, lng })}
+            pendingPin={pendingPin}
+          />
+          {addMode && !pendingPin && (
+            <div className="addbanner">CLICK THE MAP WHERE THE NEW SITE IS</div>
+          )}
+          {addMode && pendingPin && (
+            <div className="addform">
+              <div className="addform-title">NEW SITE · {pendingPin.lat.toFixed(4)}, {pendingPin.lng.toFixed(4)}</div>
+              <input
+                autoFocus
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && saveSite()}
+                placeholder="Name, e.g. Well 91-2"
+              />
+              <select value={newType} onChange={(e) => setNewType(e.target.value)}>
+                <option value="well">Well</option>
+                <option value="pad">Pad</option>
+                <option value="battery">Tank battery</option>
+                <option value="swd">SWD</option>
+              </select>
+              <div className="addform-row">
+                <button className="ghost" onClick={cancelAdd}>CANCEL</button>
+                <button className="primary" onClick={saveSite} disabled={!newName.trim() || savingSite}>
+                  {savingSite ? "SAVING…" : "ADD SITE"}
+                </button>
+              </div>
+            </div>
+          )}
           <div className="legend">
             <div className="row"><span className="dot" style={{ background: "var(--green)" }} /> ONLINE</div>
             <div className="row"><span className="dot" style={{ background: "var(--amber)" }} /> NEEDS ATTENTION</div>

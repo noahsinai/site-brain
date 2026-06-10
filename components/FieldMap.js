@@ -4,10 +4,14 @@ import { useEffect, useRef } from "react";
 
 const COLORS = { online: "#46a758", down: "#e5484d", attention: "#f5a623" };
 
-export default function FieldMap({ sites, selectedId, onSelect }) {
+export default function FieldMap({ sites, selectedId, onSelect, addMode, onMapClick, pendingPin }) {
   const mapRef = useRef(null);
   const layerRef = useRef(null);
   const LRef = useRef(null);
+  const addModeRef = useRef(addMode);
+  const onMapClickRef = useRef(onMapClick);
+  addModeRef.current = addMode;
+  onMapClickRef.current = onMapClick;
 
   useEffect(() => {
     let cancelled = false;
@@ -22,6 +26,11 @@ export default function FieldMap({ sites, selectedId, onSelect }) {
         maxZoom: 18,
       }).addTo(map);
       map.setView([31.95, -102.05], 10);
+      map.on("click", (e) => {
+        if (addModeRef.current && onMapClickRef.current) {
+          onMapClickRef.current(e.latlng.lat, e.latlng.lng);
+        }
+      });
       mapRef.current = map;
       layerRef.current = L.layerGroup().addTo(map);
       draw();
@@ -60,7 +69,7 @@ export default function FieldMap({ sites, selectedId, onSelect }) {
         `${s.name} — ${s.emergency ? "⚠ EMERGENCY · " : ""}${s.status.toUpperCase()}${s.crew_en_route ? " · CREW EN ROUTE" : ""}`,
         { className: "sb-tip", direction: "top", offset: [0, -10] }
       );
-      m.on("click", () => onSelect && onSelect(s.id));
+      m.on("click", () => !addModeRef.current && onSelect && onSelect(s.id));
       if (s.emergency) {
         const warn = L.marker([s.lat, s.lng], {
           icon: L.divIcon({ className: "", html: '<div class="emg-icon">&#9888;</div>', iconSize: [28, 28], iconAnchor: [14, 36] }),
@@ -74,8 +83,16 @@ export default function FieldMap({ sites, selectedId, onSelect }) {
 
   useEffect(() => {
     draw();
+    const L = LRef.current;
+    const layer = layerRef.current;
+    if (L && layer && pendingPin) {
+      L.marker([pendingPin.lat, pendingPin.lng], {
+        icon: L.divIcon({ className: "", html: '<div class="pending-pin">+</div>', iconSize: [26, 26], iconAnchor: [13, 13] }),
+        interactive: false,
+      }).addTo(layer);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sites, selectedId]);
+  }, [sites, selectedId, pendingPin]);
 
   return null;
 }
