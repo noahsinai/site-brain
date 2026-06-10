@@ -157,3 +157,21 @@ body {
   font-family: var(--mono); font-size: 11px; border-radius: 4px;
 }
 .leaflet-tooltip.sb-tip::before { display: none; }
+
+/* emergency caution marker */
+@keyframes emgblink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.25; transform: scale(1.2); }
+}
+.emg-icon {
+  font-size: 24px;
+  color: var(--red);
+  text-shadow: 0 0 8px rgba(229, 72, 77, 0.95), 0 0 2px #000;
+  animation: emgblink 0.9s ease-in-out infinite;
+  line-height: 1;
+  text-align: center;
+}
+.badge.emergency {
+  background: rgba(229,72,77,.2); color: var(--red);
+  animation: emgblink 0.9s ease-in-out infinite;
+}

@@ -54,6 +54,7 @@ export default function Dashboard() {
   const down = sites.filter((s) => s.status === "down").length;
   const attn = sites.filter((s) => s.status === "attention").length;
   const enroute = sites.filter((s) => s.crew_en_route).length;
+  const emg = sites.filter((s) => s.emergency).length;
 
   return (
     <div className="app">
@@ -64,6 +65,7 @@ export default function Dashboard() {
         <span className="stat"><b>{sites.length}</b> SITES</span>
         <span className="stat" style={{ color: down ? "var(--red)" : undefined }}><b>{down}</b> DOWN</span>
         <span className="stat" style={{ color: attn ? "var(--amber)" : undefined }}><b>{attn}</b> ATTENTION</span>
+        {emg > 0 && <span className="stat" style={{ color: "var(--red)" }}>⚠ <b>{emg}</b> EMERGENCY</span>}
         <span className="stat"><b>{enroute}</b> CREW EN ROUTE</span>
         <button onClick={reseed}>RESET DEMO</button>
       </header>
@@ -89,6 +91,7 @@ export default function Dashboard() {
                   <h2>
                     {site.name}
                     <span className={`badge ${site.status}`}>{site.status.toUpperCase()}</span>
+                    {site.emergency && <span className="badge emergency">⚠ EMERGENCY</span>}
                   </h2>
                   <div className="kv">
                     <div className="k">Crew en route</div>

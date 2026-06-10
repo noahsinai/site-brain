@@ -57,10 +57,18 @@ export default function FieldMap({ sites, selectedId, onSelect }) {
         fillOpacity: 0.9,
       }).addTo(layer);
       m.bindTooltip(
-        `${s.name} — ${s.status.toUpperCase()}${s.crew_en_route ? " · CREW EN ROUTE" : ""}`,
+        `${s.name} — ${s.emergency ? "⚠ EMERGENCY · " : ""}${s.status.toUpperCase()}${s.crew_en_route ? " · CREW EN ROUTE" : ""}`,
         { className: "sb-tip", direction: "top", offset: [0, -10] }
       );
       m.on("click", () => onSelect && onSelect(s.id));
+      if (s.emergency) {
+        const warn = L.marker([s.lat, s.lng], {
+          icon: L.divIcon({ className: "", html: '<div class="emg-icon">&#9888;</div>', iconSize: [28, 28], iconAnchor: [14, 36] }),
+          interactive: false,
+          keyboard: false,
+        }).addTo(layer);
+        warn.setZIndexOffset(1000);
+      }
     }
   }
 
