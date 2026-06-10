@@ -6,6 +6,25 @@ import { ago } from "@/lib/time";
 
 const FieldMap = dynamic(() => import("@/components/FieldMap"), { ssr: false });
 
+const TEAM_COLORS = {
+  PUMPER: "#46a758",
+  MECHANIC: "#f97316",
+  "ELECTRIC (I&E)": "#eab308",
+  BATTERY: "#5b8a9a",
+  "SCADA/IT": "#4f8ef7",
+  HSE: "#e5484d",
+  CHEMICAL: "#d6409f",
+  ROUSTABOUT: "#8e6cc0",
+};
+function teamColor(team) {
+  return TEAM_COLORS[(team || "").toUpperCase()] || "#8b8e99";
+}
+function enRouteList(s) {
+  if (Array.isArray(s?.crew_en_route)) return s.crew_en_route;
+  if (s?.crew_en_route && typeof s.crew_en_route === "object") return [s.crew_en_route];
+  return [];
+}
+
 export default function Dashboard() {
   const [state, setState] = useState(null);
   const [selected, setSelected] = useState("42-17");
@@ -90,7 +109,8 @@ export default function Dashboard() {
   const site = sites.find((s) => s.id === selected) || null;
   const down = sites.filter((s) => s.status === "down").length;
   const attn = sites.filter((s) => s.status === "attention").length;
-  const enroute = sites.filter((s) => s.crew_en_route).length;
+  const enroute = sites.reduce((n, s) => n + enRouteList(s).length, 0);
+  const crews = state?.crews || [];
   const emg = sites.filter((s) => s.emergency).length;
 
   return (
@@ -168,12 +188,16 @@ export default function Dashboard() {
                     {site.emergency && <span className="badge emergency">⚠ EMERGENCY</span>}
                   </h2>
                   <div className="kv">
-                    <div className="k">Crew en route</div>
-                    <div className={`v ${site.crew_en_route ? "" : "dim"}`}>
-                      {site.crew_en_route
-                        ? `${site.crew_en_route.name}${site.crew_en_route.skill ? ` — ${site.crew_en_route.skill}` : ""} · ETA ${site.crew_en_route.eta}`
-                        : "Nobody headed here"}
-                    </div>
+                    <div className="k">Crews en route ({enRouteList(site).length})</div>
+                    {enRouteList(site).length === 0 && <div className="v dim">Nobody headed here</div>}
+                    {enRouteList(site).map((c, i) => (
+                      <div key={i} className="crewchip">
+                        <span className="dot" style={{ background: teamColor(c.team) }} />
+                        <b>{c.name}</b>
+                        <span className="team" style={{ color: teamColor(c.team) }}>{(c.team || c.skill || "CREW").toUpperCase()}</span>
+                        <span className="eta">ETA {c.eta}</span>
+                      </div>
+                    ))}
 
                     <div className="k">Open items ({site.open_items.length})</div>
                     {site.open_items.length === 0 && <div className="v dim">None</div>}
@@ -214,9 +238,20 @@ export default function Dashboard() {
                   <span className="dot" style={{ background: s.status === "online" ? "var(--green)" : s.status === "down" ? "var(--red)" : "var(--amber)" }} />
                   <span className="nm">{s.name}</span>
                   <span className="sub">
-                    {s.crew_en_route ? "CREW EN ROUTE · " : ""}
+                    {enRouteList(s).length ? `${enRouteList(s).length} EN ROUTE · ` : ""}
                     {s.open_items.length ? `${s.open_items.length} OPEN` : "CLEAR"}
                   </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="sechead">Teams</div>
+            <div className="roster">
+              {crews.length === 0 && <div className="empty">No roster yet — text the bot: &quot;add Marco to the battery crew&quot;</div>}
+              {crews.map((c) => (
+                <div key={c.team} className="teamrow">
+                  <span className="teamtag" style={{ borderColor: teamColor(c.team), color: teamColor(c.team) }}>{c.team}</span>
+                  <span className="members">{(c.members || []).join(" · ") || "—"}</span>
                 </div>
               ))}
             </div>

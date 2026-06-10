@@ -218,3 +218,23 @@ body {
 .addform-row .ghost:hover { color: var(--text); }
 .addform-row .primary { background: var(--orange); color: #16171c; font-weight: 700; }
 .addform-row .primary:disabled { opacity: .5; cursor: default; }
+
+/* crew chips + roster */
+.crewchip {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--panel2); border: 1px solid var(--line);
+  border-radius: 5px; padding: 6px 9px; margin-top: 5px;
+  font-size: 12.5px;
+}
+.crewchip b { color: var(--text); }
+.crewchip .team { font-family: var(--mono); font-size: 9.5px; letter-spacing: 1px; font-weight: 700; }
+.crewchip .eta { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-left: auto; }
+
+.roster { padding: 0 16px 16px; }
+.teamrow { display: flex; align-items: baseline; gap: 10px; padding: 5px 0; }
+.teamtag {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 1.5px; font-weight: 700;
+  border: 1px solid; border-radius: 3px; padding: 2px 7px;
+  flex-shrink: 0; min-width: 92px; text-align: center;
+}
+.members { font-size: 12.5px; color: var(--text); line-height: 1.5; }

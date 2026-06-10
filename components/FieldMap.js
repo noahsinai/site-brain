@@ -53,7 +53,8 @@ export default function FieldMap({ sites, selectedId, onSelect, addMode, onMapCl
     for (const s of sites || []) {
       const color = COLORS[s.status] || "#8b8e99";
       const sel = s.id === selectedId;
-      if (s.crew_en_route) {
+      const enr = Array.isArray(s.crew_en_route) ? s.crew_en_route : s.crew_en_route ? [s.crew_en_route] : [];
+      if (enr.length) {
         L.circleMarker([s.lat, s.lng], {
           radius: 14, color, weight: 1.5, dashArray: "3 4", fill: false, opacity: 0.8,
         }).addTo(layer);
@@ -66,7 +67,9 @@ export default function FieldMap({ sites, selectedId, onSelect, addMode, onMapCl
         fillOpacity: 0.9,
       }).addTo(layer);
       m.bindTooltip(
-        `${s.name} — ${s.emergency ? "⚠ EMERGENCY · " : ""}${s.status.toUpperCase()}${s.crew_en_route ? " · CREW EN ROUTE" : ""}`,
+        `${s.name} — ${s.emergency ? "⚠ EMERGENCY · " : ""}${s.status.toUpperCase()}${
+          enr.length ? " · EN ROUTE: " + enr.map((c) => `${c.name} [${c.team || "CREW"}]`).join(", ") : ""
+        }`,
         { className: "sb-tip", direction: "top", offset: [0, -10] }
       );
       m.on("click", () => !addModeRef.current && onSelect && onSelect(s.id));
