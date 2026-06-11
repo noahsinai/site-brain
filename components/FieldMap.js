@@ -4,10 +4,18 @@ import { useEffect, useRef } from "react";
 
 const COLORS = { online: "#46a758", down: "#e5484d", attention: "#f5a623" };
 
-export default function FieldMap({ sites, selectedId, onSelect, addMode, onMapClick, pendingPin }) {
+const TILE_URLS = {
+  dark: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+  light: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+};
+
+export default function FieldMap({ sites, selectedId, onSelect, addMode, onMapClick, pendingPin, theme = "dark" }) {
   const mapRef = useRef(null);
   const layerRef = useRef(null);
   const LRef = useRef(null);
+  const tileRef = useRef(null);
+  const themeRef = useRef(theme);
+  themeRef.current = theme;
   const addModeRef = useRef(addMode);
   const onMapClickRef = useRef(onMapClick);
   addModeRef.current = addMode;
@@ -20,7 +28,7 @@ export default function FieldMap({ sites, selectedId, onSelect, addMode, onMapCl
       if (cancelled || mapRef.current) return;
       LRef.current = L;
       const map = L.map("map", { zoomControl: true, attributionControl: true });
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      tileRef.current = L.tileLayer(TILE_URLS[themeRef.current] || TILE_URLS.dark, {
         attribution: '&copy; OpenStreetMap &copy; CARTO',
         subdomains: "abcd",
         maxZoom: 18,
@@ -83,6 +91,10 @@ export default function FieldMap({ sites, selectedId, onSelect, addMode, onMapCl
       }
     }
   }
+
+  useEffect(() => {
+    if (tileRef.current) tileRef.current.setUrl(TILE_URLS[theme] || TILE_URLS.dark);
+  }, [theme]);
 
   useEffect(() => {
     draw();

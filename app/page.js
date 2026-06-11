@@ -35,7 +35,20 @@ export default function Dashboard() {
   const [newName, setNewName] = useState("");
   const [newType, setNewType] = useState("well");
   const [savingSite, setSavingSite] = useState(false);
+  const [theme, setTheme] = useState("dark");
   const feedRef = useRef(null);
+
+  useEffect(() => {
+    const saved = typeof window !== "undefined" && window.localStorage.getItem("sb-theme");
+    if (saved === "light" || saved === "dark") setTheme(saved);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    try {
+      window.localStorage.setItem("sb-theme", theme);
+    } catch {}
+  }, [theme]);
 
   async function refresh() {
     try {
@@ -132,6 +145,9 @@ export default function Dashboard() {
         <button onClick={addMode ? cancelAdd : startAdd} style={addMode ? { color: "var(--orange)", borderColor: "var(--orange)" } : undefined}>
           {addMode ? "✕ CANCEL" : "+ ADD SITE"}
         </button>
+        <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")} title="Toggle light/dark mode">
+          {theme === "dark" ? "☀ LIGHT" : "☾ DARK"}
+        </button>
         <button onClick={reseed}>RESET DEMO</button>
       </header>
 
@@ -145,6 +161,7 @@ export default function Dashboard() {
             addMode={addMode}
             onMapClick={(lat, lng) => setPendingPin({ lat, lng })}
             pendingPin={pendingPin}
+            theme={theme}
           />
           {addMode && !pendingPin && (
             <div className="addbanner">CLICK THE MAP WHERE THE NEW SITE IS</div>
