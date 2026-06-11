@@ -111,6 +111,8 @@ export default function Dashboard() {
   const attn = sites.filter((s) => s.status === "attention").length;
   const enroute = sites.reduce((n, s) => n + enRouteList(s).length, 0);
   const crews = state?.crews || [];
+  const metrics = state?.metrics || { trips_avoided: 0, items_closed: 0 };
+  const saved = metrics.trips_avoided * 1000;
   const emg = sites.filter((s) => s.emergency).length;
 
   return (
@@ -124,6 +126,9 @@ export default function Dashboard() {
         <span className="stat" style={{ color: attn ? "var(--amber)" : undefined }}><b>{attn}</b> ATTENTION</span>
         {emg > 0 && <span className="stat" style={{ color: "var(--red)" }}>⚠ <b>{emg}</b> EMERGENCY</span>}
         <span className="stat"><b>{enroute}</b> CREW EN ROUTE</span>
+        <span className="stat" style={{ color: metrics.trips_avoided ? "var(--green)" : undefined }} title="Truck rolls the brain prevented × $1,000 fully-loaded cost">
+          <b>{metrics.trips_avoided}</b> TRIPS AVOIDED{saved > 0 ? ` · ≈$${saved.toLocaleString()}` : ""}
+        </span>
         <button onClick={addMode ? cancelAdd : startAdd} style={addMode ? { color: "var(--orange)", borderColor: "var(--orange)" } : undefined}>
           {addMode ? "✕ CANCEL" : "+ ADD SITE"}
         </button>
@@ -185,6 +190,9 @@ export default function Dashboard() {
                   <h2>
                     {site.name}
                     <span className={`badge ${site.status}`}>{site.status.toUpperCase()}</span>
+                    <span className={`badge prio-${(site.priority || "C").toLowerCase()}`} title="Priority tier — downtime cost ranking">
+                      {site.priority || "C"}{site.bpd ? ` · ${site.bpd} BPD` : ""}
+                    </span>
                     {site.emergency && <span className="badge emergency">⚠ EMERGENCY</span>}
                   </h2>
                   <div className="kv">
@@ -236,7 +244,7 @@ export default function Dashboard() {
               {sites.map((s) => (
                 <div key={s.id} className={`siterow ${s.id === selected ? "sel" : ""}`} onClick={() => setSelected(s.id)}>
                   <span className="dot" style={{ background: s.status === "online" ? "var(--green)" : s.status === "down" ? "var(--red)" : "var(--amber)" }} />
-                  <span className="nm">{s.name}</span>
+                  <span className="nm">{s.name} <span className={`prio prio-${(s.priority || "C").toLowerCase()}`}>{s.priority || "C"}</span></span>
                   <span className="sub">
                     {enRouteList(s).length ? `${enRouteList(s).length} EN ROUTE · ` : ""}
                     {s.open_items.length ? `${s.open_items.length} OPEN` : "CLEAR"}

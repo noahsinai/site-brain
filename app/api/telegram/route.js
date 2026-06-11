@@ -11,8 +11,9 @@ Text me like you'd text the crew:
 • "Heading to 42-17, what's the status?"
 • "Swapped the motor on 42-17, well's back online. Left the old one on the pad."
 • "Who was at Hartley last?"
+• /briefing — full field rundown: emergencies, down wells by priority, crews rolling
 
-I file everything to the right site and answer from the full history.`;
+I know every site's history, which team each job needs, and which wells are worth the most.`;
 
 export async function POST(req) {
   const expected = process.env.TELEGRAM_WEBHOOK_SECRET;

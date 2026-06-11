@@ -32,6 +32,8 @@ export async function POST(req) {
     lat,
     lng,
     status: "online",
+    priority: "C",
+    bpd: null,
     emergency: false,
     crew_en_route: null,
     open_items: [],

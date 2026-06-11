@@ -21,3 +21,15 @@ export async function POST(req) {
   await saveState(state);
   return Response.json({ reply });
 }
+
+// GET variant for environments that can't POST (testing/automation).
+export async function GET(req) {
+  const u = new URL(req.url);
+  const text = (u.searchParams.get("text") || "").trim();
+  if (!text) return Response.json({ error: "text param required" }, { status: 400 });
+  const who = (u.searchParams.get("who") || "Dispatcher").slice(0, 40);
+  const state = await getState();
+  const reply = await brainProcess(state, who, text);
+  await saveState(state);
+  return Response.json({ reply });
+}
